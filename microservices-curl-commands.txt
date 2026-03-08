@@ -1,0 +1,1001 @@
+================================================================================
+        MICROSERVICES UMBRELLA - COMPLETE CURL COMMANDS REFERENCE
+        Java 8 | Spring Boot 2.7.18 | Spring Cloud 2021.0.8
+================================================================================
+
+SERVICES & PORTS:
+  Eureka Server    : http://localhost:8761
+  Product Service  : http://localhost:8081
+  Finance Service  : http://localhost:8082
+  Customer Service : http://localhost:8083
+
+STARTUP ORDER (IMPORTANT):
+  1. Start eureka-server    first
+  2. Start product-service  second
+  3. Start finance-service  third
+  4. Start customer-service fourth
+
+================================================================================
+                          SECTION 1: HEALTH CHECKS
+================================================================================
+
+------------------------------------------------------------------------
+1.1 Eureka Server Health
+------------------------------------------------------------------------
+DESCRIPTION : Check if Eureka Server is running and healthy
+COMMAND     :
+  curl http://localhost:8761/actuator/health
+
+EXPECTED RESPONSE (200 OK):
+  {"status":"UP"}
+
+------------------------------------------------------------------------
+1.2 Product Service Health
+------------------------------------------------------------------------
+DESCRIPTION : Check if Product Service is running and healthy
+COMMAND     :
+  curl http://localhost:8081/actuator/health
+
+EXPECTED RESPONSE (200 OK):
+  {"status":"UP"}
+
+------------------------------------------------------------------------
+1.3 Finance Service Health
+------------------------------------------------------------------------
+DESCRIPTION : Check if Finance Service is running and healthy
+COMMAND     :
+  curl http://localhost:8082/actuator/health
+
+EXPECTED RESPONSE (200 OK):
+  {"status":"UP"}
+
+------------------------------------------------------------------------
+1.4 Customer Service Health
+------------------------------------------------------------------------
+DESCRIPTION : Check if Customer Service is running and healthy
+COMMAND     :
+  curl http://localhost:8083/actuator/health
+
+EXPECTED RESPONSE (200 OK):
+  {"status":"UP"}
+
+================================================================================
+                       SECTION 2: EUREKA REGISTRY CHECKS
+================================================================================
+
+------------------------------------------------------------------------
+2.1 Get All Registered Services
+------------------------------------------------------------------------
+DESCRIPTION : View all microservices registered in Eureka registry
+COMMAND     :
+  curl http://localhost:8761/eureka/apps
+
+EXPECTED RESPONSE (200 OK):
+  XML showing all 3 registered services:
+  PRODUCT-SERVICE, FINANCE-SERVICE, CUSTOMER-SERVICE
+
+------------------------------------------------------------------------
+2.2 Check Product Service in Eureka
+------------------------------------------------------------------------
+DESCRIPTION : Verify product-service is registered with Eureka
+COMMAND     :
+  curl http://localhost:8761/eureka/apps/PRODUCT-SERVICE
+
+EXPECTED RESPONSE (200 OK):
+  XML with status: UP, port: 8081
+
+------------------------------------------------------------------------
+2.3 Check Finance Service in Eureka
+------------------------------------------------------------------------
+DESCRIPTION : Verify finance-service is registered with Eureka
+COMMAND     :
+  curl http://localhost:8761/eureka/apps/FINANCE-SERVICE
+
+EXPECTED RESPONSE (200 OK):
+  XML with status: UP, port: 8082
+
+------------------------------------------------------------------------
+2.4 Check Customer Service in Eureka
+------------------------------------------------------------------------
+DESCRIPTION : Verify customer-service is registered with Eureka
+COMMAND     :
+  curl http://localhost:8761/eureka/apps/CUSTOMER-SERVICE
+
+EXPECTED RESPONSE (200 OK):
+  XML with status: UP, port: 8083
+
+================================================================================
+                    SECTION 3: CUSTOMER SERVICE (Port 8083)
+                    Run these BEFORE finance service tests
+================================================================================
+
+------------------------------------------------------------------------
+3.1 Register Customer 1 (John Doe - USA)
+------------------------------------------------------------------------
+DESCRIPTION : Register a new customer. Status starts as PENDING by default.
+COMMAND     :
+  curl -X POST http://localhost:8083/api/customers -H "Content-Type: application/json" -d "{\"firstName\":\"John\",\"lastName\":\"Doe\",\"email\":\"john.doe@example.com\",\"phone\":\"+1234567890\",\"address\":\"123 Main Street\",\"city\":\"New York\",\"country\":\"USA\",\"dateOfBirth\":\"1990-05-15\"}"
+
+EXPECTED RESPONSE (201 Created):
+  {
+    "id": 1,
+    "firstName": "John",
+    "lastName": "Doe",
+    "email": "john.doe@example.com",
+    "phone": "+1234567890",
+    "address": "123 Main Street",
+    "city": "New York",
+    "country": "USA",
+    "dateOfBirth": "1990-05-15",
+    "status": "PENDING",
+    "isVerified": false,
+    "createdAt": "2024-01-01T10:00:00",
+    "updatedAt": "2024-01-01T10:00:00"
+  }
+
+------------------------------------------------------------------------
+3.2 Register Customer 2 (Jane Smith - USA)
+------------------------------------------------------------------------
+DESCRIPTION : Register second customer
+COMMAND     :
+  curl -X POST http://localhost:8083/api/customers -H "Content-Type: application/json" -d "{\"firstName\":\"Jane\",\"lastName\":\"Smith\",\"email\":\"jane.smith@example.com\",\"phone\":\"+0987654321\",\"address\":\"456 Oak Avenue\",\"city\":\"Los Angeles\",\"country\":\"USA\",\"dateOfBirth\":\"1985-08-22\"}"
+
+EXPECTED RESPONSE (201 Created):
+  {
+    "id": 2,
+    "firstName": "Jane",
+    "lastName": "Smith",
+    "email": "jane.smith@example.com",
+    "status": "PENDING",
+    "isVerified": false
+  }
+
+------------------------------------------------------------------------
+3.3 Register Customer 3 (Raj Kumar - India)
+------------------------------------------------------------------------
+DESCRIPTION : Register third customer from India
+COMMAND     :
+  curl -X POST http://localhost:8083/api/customers -H "Content-Type: application/json" -d "{\"firstName\":\"Raj\",\"lastName\":\"Kumar\",\"email\":\"raj.kumar@example.com\",\"phone\":\"+9876543210\",\"address\":\"789 Park Road\",\"city\":\"Chennai\",\"country\":\"India\",\"dateOfBirth\":\"1995-03-10\"}"
+
+EXPECTED RESPONSE (201 Created):
+  {
+    "id": 3,
+    "firstName": "Raj",
+    "lastName": "Kumar",
+    "email": "raj.kumar@example.com",
+    "city": "Chennai",
+    "country": "India",
+    "status": "PENDING",
+    "isVerified": false
+  }
+
+------------------------------------------------------------------------
+3.4 Get All Customers
+------------------------------------------------------------------------
+DESCRIPTION : Retrieve all registered customers from the database
+COMMAND     :
+  curl -X GET http://localhost:8083/api/customers
+
+EXPECTED RESPONSE (200 OK):
+  JSON array of 3 customers with all their details
+
+------------------------------------------------------------------------
+3.5 Get Customer by ID
+------------------------------------------------------------------------
+DESCRIPTION : Retrieve a single customer using their ID
+COMMAND     :
+  curl -X GET http://localhost:8083/api/customers/1
+
+EXPECTED RESPONSE (200 OK):
+  {
+    "id": 1,
+    "firstName": "John",
+    "lastName": "Doe",
+    "email": "john.doe@example.com",
+    "status": "PENDING"
+  }
+
+------------------------------------------------------------------------
+3.6 Get Customer by Email
+------------------------------------------------------------------------
+DESCRIPTION : Find a customer using their email address
+COMMAND     :
+  curl -X GET http://localhost:8083/api/customers/email/john.doe@example.com
+
+EXPECTED RESPONSE (200 OK):
+  Customer JSON object matching the email
+
+------------------------------------------------------------------------
+3.7 Get Customers by Status PENDING
+------------------------------------------------------------------------
+DESCRIPTION : List all customers with PENDING status (not yet verified)
+COMMAND     :
+  curl -X GET http://localhost:8083/api/customers/status/PENDING
+
+EXPECTED RESPONSE (200 OK):
+  JSON array with all 3 customers (all PENDING before verification)
+
+------------------------------------------------------------------------
+3.8 Verify Customer 1 (IMPORTANT - Required Before Finance Tests)
+------------------------------------------------------------------------
+DESCRIPTION : Verify customer. Changes status from PENDING to ACTIVE.
+              Finance-service will REJECT transactions for non-ACTIVE customers.
+COMMAND     :
+  curl -X PATCH http://localhost:8083/api/customers/1/verify
+
+EXPECTED RESPONSE (200 OK):
+  {
+    "id": 1,
+    "firstName": "John",
+    "status": "ACTIVE",
+    "isVerified": true
+  }
+
+------------------------------------------------------------------------
+3.9 Verify Customer 2 (IMPORTANT - Required Before Finance Tests)
+------------------------------------------------------------------------
+DESCRIPTION : Verify second customer so they can be used in transactions
+COMMAND     :
+  curl -X PATCH http://localhost:8083/api/customers/2/verify
+
+EXPECTED RESPONSE (200 OK):
+  {
+    "id": 2,
+    "firstName": "Jane",
+    "status": "ACTIVE",
+    "isVerified": true
+  }
+
+------------------------------------------------------------------------
+3.10 Get Customers by Status ACTIVE
+------------------------------------------------------------------------
+DESCRIPTION : List all verified and active customers
+COMMAND     :
+  curl -X GET http://localhost:8083/api/customers/status/ACTIVE
+
+EXPECTED RESPONSE (200 OK):
+  JSON array with Customer 1 and Customer 2 (both verified)
+
+------------------------------------------------------------------------
+3.11 Update Customer 1
+------------------------------------------------------------------------
+DESCRIPTION : Update customer details (address and city changed)
+COMMAND     :
+  curl -X PUT http://localhost:8083/api/customers/1 -H "Content-Type: application/json" -d "{\"firstName\":\"John\",\"lastName\":\"Doe Updated\",\"email\":\"john.doe@example.com\",\"phone\":\"+1234567890\",\"address\":\"999 New Street\",\"city\":\"Chicago\",\"country\":\"USA\",\"dateOfBirth\":\"1990-05-15\"}"
+
+EXPECTED RESPONSE (200 OK):
+  {
+    "id": 1,
+    "firstName": "John",
+    "lastName": "Doe Updated",
+    "address": "999 New Street",
+    "city": "Chicago"
+  }
+
+------------------------------------------------------------------------
+3.12 Update Customer 3 Status to ACTIVE manually
+------------------------------------------------------------------------
+DESCRIPTION : Change status without going through verify endpoint
+COMMAND     :
+  curl -X PATCH "http://localhost:8083/api/customers/3/status?status=ACTIVE"
+
+EXPECTED RESPONSE (200 OK):
+  {
+    "id": 3,
+    "firstName": "Raj",
+    "status": "ACTIVE"
+  }
+
+------------------------------------------------------------------------
+3.13 Suspend Customer 3
+------------------------------------------------------------------------
+DESCRIPTION : Suspend a customer account
+COMMAND     :
+  curl -X PATCH "http://localhost:8083/api/customers/3/status?status=SUSPENDED"
+
+EXPECTED RESPONSE (200 OK):
+  {
+    "id": 3,
+    "status": "SUSPENDED"
+  }
+
+------------------------------------------------------------------------
+3.14 Delete Customer 3
+------------------------------------------------------------------------
+DESCRIPTION : Permanently delete a customer record
+COMMAND     :
+  curl -X DELETE http://localhost:8083/api/customers/3
+
+EXPECTED RESPONSE (204 No Content):
+  Empty body — deletion successful
+
+------------------------------------------------------------------------
+3.15 TEST - Duplicate Email Error
+------------------------------------------------------------------------
+DESCRIPTION : Try registering with an already existing email
+COMMAND     :
+  curl -X POST http://localhost:8083/api/customers -H "Content-Type: application/json" -d "{\"firstName\":\"Fake\",\"lastName\":\"John\",\"email\":\"john.doe@example.com\",\"phone\":\"+1111111111\"}"
+
+EXPECTED RESPONSE (400 Bad Request):
+  {
+    "status": 400,
+    "error": "Bad Request",
+    "message": "Customer with email already registered: john.doe@example.com"
+  }
+
+------------------------------------------------------------------------
+3.16 TEST - Invalid Email Format
+------------------------------------------------------------------------
+DESCRIPTION : Try registering with a badly formatted email
+COMMAND     :
+  curl -X POST http://localhost:8083/api/customers -H "Content-Type: application/json" -d "{\"firstName\":\"Test\",\"lastName\":\"User\",\"email\":\"not-an-email\",\"phone\":\"+1234567890\"}"
+
+EXPECTED RESPONSE (400 Bad Request):
+  {
+    "status": 400,
+    "error": "Validation Failed",
+    "errors": {
+      "email": "Invalid email format"
+    }
+  }
+
+------------------------------------------------------------------------
+3.17 TEST - Customer Not Found
+------------------------------------------------------------------------
+DESCRIPTION : Try fetching a customer with non-existent ID
+COMMAND     :
+  curl -X GET http://localhost:8083/api/customers/999
+
+EXPECTED RESPONSE (404 Not Found):
+  {
+    "status": 404,
+    "error": "Not Found",
+    "message": "Customer not found with id: 999"
+  }
+
+------------------------------------------------------------------------
+3.18 TEST - Missing Required Fields
+------------------------------------------------------------------------
+DESCRIPTION : Try registering with no required fields
+COMMAND     :
+  curl -X POST http://localhost:8083/api/customers -H "Content-Type: application/json" -d "{\"city\":\"New York\"}"
+
+EXPECTED RESPONSE (400 Bad Request):
+  {
+    "status": 400,
+    "error": "Validation Failed",
+    "errors": {
+      "firstName": "First name is required",
+      "lastName": "Last name is required",
+      "email": "Email is required"
+    }
+  }
+
+================================================================================
+                    SECTION 4: PRODUCT SERVICE (Port 8081)
+                    Run these BEFORE finance service tests
+================================================================================
+
+------------------------------------------------------------------------
+4.1 Create Product 1 (Laptop)
+------------------------------------------------------------------------
+DESCRIPTION : Register a new laptop product in the system
+COMMAND     :
+  curl -X POST http://localhost:8081/api/products -H "Content-Type: application/json" -d "{\"name\":\"Laptop Pro X\",\"description\":\"High performance laptop\",\"sku\":\"LAP-001\",\"price\":1299.99,\"stockQuantity\":50,\"category\":\"Electronics\"}"
+
+EXPECTED RESPONSE (201 Created):
+  {
+    "id": 1,
+    "name": "Laptop Pro X",
+    "description": "High performance laptop",
+    "sku": "LAP-001",
+    "price": 1299.99,
+    "stockQuantity": 50,
+    "category": "Electronics",
+    "isActive": true,
+    "createdAt": "2024-01-01T10:00:00",
+    "updatedAt": "2024-01-01T10:00:00"
+  }
+
+------------------------------------------------------------------------
+4.2 Create Product 2 (Mouse)
+------------------------------------------------------------------------
+DESCRIPTION : Register a wireless mouse product
+COMMAND     :
+  curl -X POST http://localhost:8081/api/products -H "Content-Type: application/json" -d "{\"name\":\"Wireless Mouse\",\"description\":\"Ergonomic wireless mouse\",\"sku\":\"MOU-002\",\"price\":29.99,\"stockQuantity\":200,\"category\":\"Electronics\"}"
+
+EXPECTED RESPONSE (201 Created):
+  {
+    "id": 2,
+    "name": "Wireless Mouse",
+    "sku": "MOU-002",
+    "price": 29.99,
+    "stockQuantity": 200,
+    "isActive": true
+  }
+
+------------------------------------------------------------------------
+4.3 Create Product 3 (Office Chair)
+------------------------------------------------------------------------
+DESCRIPTION : Register an office chair product
+COMMAND     :
+  curl -X POST http://localhost:8081/api/products -H "Content-Type: application/json" -d "{\"name\":\"Office Chair\",\"description\":\"Comfortable office chair\",\"sku\":\"CHR-003\",\"price\":299.99,\"stockQuantity\":15,\"category\":\"Furniture\"}"
+
+EXPECTED RESPONSE (201 Created):
+  {
+    "id": 3,
+    "name": "Office Chair",
+    "sku": "CHR-003",
+    "price": 299.99,
+    "category": "Furniture",
+    "isActive": true
+  }
+
+------------------------------------------------------------------------
+4.4 Create Product 4 (Standing Desk)
+------------------------------------------------------------------------
+DESCRIPTION : Register a standing desk product
+COMMAND     :
+  curl -X POST http://localhost:8081/api/products -H "Content-Type: application/json" -d "{\"name\":\"Standing Desk\",\"description\":\"Adjustable standing desk\",\"sku\":\"DSK-004\",\"price\":499.99,\"stockQuantity\":10,\"category\":\"Furniture\"}"
+
+EXPECTED RESPONSE (201 Created):
+  {
+    "id": 4,
+    "name": "Standing Desk",
+    "sku": "DSK-004",
+    "price": 499.99,
+    "isActive": true
+  }
+
+------------------------------------------------------------------------
+4.5 Get All Products
+------------------------------------------------------------------------
+DESCRIPTION : Retrieve all registered products from the database
+COMMAND     :
+  curl -X GET http://localhost:8081/api/products
+
+EXPECTED RESPONSE (200 OK):
+  JSON array of 4 products with all details
+
+------------------------------------------------------------------------
+4.6 Get Product by ID
+------------------------------------------------------------------------
+DESCRIPTION : Retrieve a single product by its ID
+COMMAND     :
+  curl -X GET http://localhost:8081/api/products/1
+
+EXPECTED RESPONSE (200 OK):
+  Single product JSON object for Laptop Pro X
+
+------------------------------------------------------------------------
+4.7 Get Product by SKU
+------------------------------------------------------------------------
+DESCRIPTION : Find a product using its unique SKU code
+COMMAND     :
+  curl -X GET http://localhost:8081/api/products/sku/LAP-001
+
+EXPECTED RESPONSE (200 OK):
+  Product JSON object matching SKU LAP-001
+
+------------------------------------------------------------------------
+4.8 Get Products by Category Electronics
+------------------------------------------------------------------------
+DESCRIPTION : List all products under Electronics category
+COMMAND     :
+  curl -X GET http://localhost:8081/api/products/category/Electronics
+
+EXPECTED RESPONSE (200 OK):
+  JSON array with Laptop Pro X and Wireless Mouse
+
+------------------------------------------------------------------------
+4.9 Get Products by Category Furniture
+------------------------------------------------------------------------
+DESCRIPTION : List all products under Furniture category
+COMMAND     :
+  curl -X GET http://localhost:8081/api/products/category/Furniture
+
+EXPECTED RESPONSE (200 OK):
+  JSON array with Office Chair and Standing Desk
+
+------------------------------------------------------------------------
+4.10 Update Product 1
+------------------------------------------------------------------------
+DESCRIPTION : Update product name, price, and stock quantity
+COMMAND     :
+  curl -X PUT http://localhost:8081/api/products/1 -H "Content-Type: application/json" -d "{\"name\":\"Laptop Pro X v2\",\"description\":\"Updated high performance laptop\",\"sku\":\"LAP-001\",\"price\":1499.99,\"stockQuantity\":30,\"category\":\"Electronics\"}"
+
+EXPECTED RESPONSE (200 OK):
+  {
+    "id": 1,
+    "name": "Laptop Pro X v2",
+    "price": 1499.99,
+    "stockQuantity": 30
+  }
+
+------------------------------------------------------------------------
+4.11 Toggle Product 4 to Inactive
+------------------------------------------------------------------------
+DESCRIPTION : Deactivate a product. Finance-service will reject transactions
+              for inactive products.
+COMMAND     :
+  curl -X PATCH http://localhost:8081/api/products/4/toggle
+
+EXPECTED RESPONSE (200 OK):
+  {
+    "id": 4,
+    "name": "Standing Desk",
+    "isActive": false
+  }
+
+------------------------------------------------------------------------
+4.12 Toggle Product 4 Back to Active
+------------------------------------------------------------------------
+DESCRIPTION : Re-activate a product
+COMMAND     :
+  curl -X PATCH http://localhost:8081/api/products/4/toggle
+
+EXPECTED RESPONSE (200 OK):
+  {
+    "id": 4,
+    "name": "Standing Desk",
+    "isActive": true
+  }
+
+------------------------------------------------------------------------
+4.13 Delete Product 4
+------------------------------------------------------------------------
+DESCRIPTION : Permanently delete a product record
+COMMAND     :
+  curl -X DELETE http://localhost:8081/api/products/4
+
+EXPECTED RESPONSE (204 No Content):
+  Empty body — deletion successful
+
+------------------------------------------------------------------------
+4.14 TEST - Duplicate SKU Error
+------------------------------------------------------------------------
+DESCRIPTION : Try creating a product with an already existing SKU
+COMMAND     :
+  curl -X POST http://localhost:8081/api/products -H "Content-Type: application/json" -d "{\"name\":\"Duplicate Laptop\",\"sku\":\"LAP-001\",\"price\":100.00,\"stockQuantity\":10,\"category\":\"Electronics\"}"
+
+EXPECTED RESPONSE (400 Bad Request):
+  {
+    "status": 400,
+    "error": "Bad Request",
+    "message": "Product with SKU already exists: LAP-001"
+  }
+
+------------------------------------------------------------------------
+4.15 TEST - Validation Error (Missing Required Fields)
+------------------------------------------------------------------------
+DESCRIPTION : Try creating a product without required name and SKU
+COMMAND     :
+  curl -X POST http://localhost:8081/api/products -H "Content-Type: application/json" -d "{\"description\":\"No name no sku\"}"
+
+EXPECTED RESPONSE (400 Bad Request):
+  {
+    "status": 400,
+    "error": "Validation Failed",
+    "errors": {
+      "name": "Product name is required",
+      "sku": "SKU is required",
+      "price": "Price is required",
+      "stockQuantity": "Stock quantity is required",
+      "category": "Category is required"
+    }
+  }
+
+------------------------------------------------------------------------
+4.16 TEST - Product Not Found
+------------------------------------------------------------------------
+DESCRIPTION : Try fetching a product with a non-existent ID
+COMMAND     :
+  curl -X GET http://localhost:8081/api/products/999
+
+EXPECTED RESPONSE (404 Not Found):
+  {
+    "status": 404,
+    "error": "Not Found",
+    "message": "Product not found with id: 999"
+  }
+
+------------------------------------------------------------------------
+4.17 TEST - Invalid Price (Zero or Negative)
+------------------------------------------------------------------------
+DESCRIPTION : Try creating a product with price = 0
+COMMAND     :
+  curl -X POST http://localhost:8081/api/products -H "Content-Type: application/json" -d "{\"name\":\"Bad Product\",\"sku\":\"BAD-001\",\"price\":0,\"stockQuantity\":10,\"category\":\"Test\"}"
+
+EXPECTED RESPONSE (400 Bad Request):
+  {
+    "status": 400,
+    "error": "Validation Failed",
+    "errors": {
+      "price": "Price must be greater than 0"
+    }
+  }
+
+================================================================================
+         SECTION 5: FINANCE SERVICE (Port 8082)
+         INTER-SERVICE CALLS: Finance calls Customer + Product via Eureka
+         PREREQUISITE: Customer 1 and Customer 2 must be ACTIVE (Section 3.8-3.9)
+                       Products 1, 2, 3 must exist (Section 4.1-4.3)
+================================================================================
+
+------------------------------------------------------------------------
+5.1 Create Transaction - PAYMENT (Valid Customer + Valid Product)
+------------------------------------------------------------------------
+DESCRIPTION : Create a payment transaction.
+              Internally calls:
+              - customer-service to validate customerId=1 (must be ACTIVE)
+              - product-service to validate productId=1 (must be active + in stock)
+              Response enriched with customerName, customerEmail, productName
+COMMAND     :
+  curl -X POST http://localhost:8082/api/transactions -H "Content-Type: application/json" -d "{\"referenceNumber\":\"TXN-2024-001\",\"amount\":1299.99,\"transactionType\":\"PAYMENT\",\"accountNumber\":\"ACC-123456\",\"description\":\"Laptop purchase payment\",\"currency\":\"USD\",\"customerId\":1,\"productId\":1}"
+
+EXPECTED RESPONSE (201 Created):
+  {
+    "id": 1,
+    "referenceNumber": "TXN-2024-001",
+    "amount": 1299.99,
+    "transactionType": "PAYMENT",
+    "status": "PENDING",
+    "accountNumber": "ACC-123456",
+    "customerId": 1,
+    "productId": 1,
+    "customerName": "John Doe Updated",
+    "customerEmail": "john.doe@example.com",
+    "productName": "Laptop Pro X v2",
+    "currency": "USD",
+    "createdAt": "2024-01-01T10:00:00"
+  }
+
+------------------------------------------------------------------------
+5.2 Create Transaction - CREDIT (Customer only, no Product)
+------------------------------------------------------------------------
+DESCRIPTION : Create a credit transaction linked to customer only.
+              Calls customer-service to validate. No product validation needed.
+COMMAND     :
+  curl -X POST http://localhost:8082/api/transactions -H "Content-Type: application/json" -d "{\"referenceNumber\":\"TXN-2024-002\",\"amount\":5000.00,\"transactionType\":\"CREDIT\",\"accountNumber\":\"ACC-123456\",\"description\":\"Salary deposit\",\"currency\":\"USD\",\"customerId\":1}"
+
+EXPECTED RESPONSE (201 Created):
+  {
+    "id": 2,
+    "referenceNumber": "TXN-2024-002",
+    "amount": 5000.00,
+    "transactionType": "CREDIT",
+    "status": "PENDING",
+    "customerId": 1,
+    "customerName": "John Doe Updated",
+    "customerEmail": "john.doe@example.com",
+    "productName": null
+  }
+
+------------------------------------------------------------------------
+5.3 Create Transaction - DEBIT (Customer 2 + Product 2)
+------------------------------------------------------------------------
+DESCRIPTION : Create a debit transaction for Jane Smith buying a mouse.
+              Validates Customer 2 (Jane) and Product 2 (Mouse).
+COMMAND     :
+  curl -X POST http://localhost:8082/api/transactions -H "Content-Type: application/json" -d "{\"referenceNumber\":\"TXN-2024-003\",\"amount\":29.99,\"transactionType\":\"DEBIT\",\"accountNumber\":\"ACC-654321\",\"description\":\"Mouse purchase\",\"currency\":\"USD\",\"customerId\":2,\"productId\":2}"
+
+EXPECTED RESPONSE (201 Created):
+  {
+    "id": 3,
+    "referenceNumber": "TXN-2024-003",
+    "amount": 29.99,
+    "transactionType": "DEBIT",
+    "status": "PENDING",
+    "customerId": 2,
+    "productId": 2,
+    "customerName": "Jane Smith",
+    "productName": "Wireless Mouse"
+  }
+
+------------------------------------------------------------------------
+5.4 Create Transaction - TRANSFER (No Product)
+------------------------------------------------------------------------
+DESCRIPTION : Create a bank transfer transaction
+COMMAND     :
+  curl -X POST http://localhost:8082/api/transactions -H "Content-Type: application/json" -d "{\"referenceNumber\":\"TXN-2024-004\",\"amount\":500.00,\"transactionType\":\"TRANSFER\",\"accountNumber\":\"ACC-789012\",\"description\":\"Transfer to savings account\",\"currency\":\"USD\",\"customerId\":2}"
+
+EXPECTED RESPONSE (201 Created):
+  {
+    "id": 4,
+    "referenceNumber": "TXN-2024-004",
+    "amount": 500.00,
+    "transactionType": "TRANSFER",
+    "status": "PENDING",
+    "customerId": 2,
+    "customerName": "Jane Smith"
+  }
+
+------------------------------------------------------------------------
+5.5 Create Transaction - REFUND (Customer 1 + Product 2)
+------------------------------------------------------------------------
+DESCRIPTION : Create a refund transaction for mouse return
+COMMAND     :
+  curl -X POST http://localhost:8082/api/transactions -H "Content-Type: application/json" -d "{\"referenceNumber\":\"TXN-2024-005\",\"amount\":29.99,\"transactionType\":\"REFUND\",\"accountNumber\":\"ACC-123456\",\"description\":\"Mouse return refund\",\"currency\":\"USD\",\"customerId\":1,\"productId\":2}"
+
+EXPECTED RESPONSE (201 Created):
+  {
+    "id": 5,
+    "referenceNumber": "TXN-2024-005",
+    "transactionType": "REFUND",
+    "customerId": 1,
+    "productId": 2,
+    "customerName": "John Doe Updated",
+    "productName": "Wireless Mouse"
+  }
+
+------------------------------------------------------------------------
+5.6 Get All Transactions
+------------------------------------------------------------------------
+DESCRIPTION : Retrieve all transactions from the database
+COMMAND     :
+  curl -X GET http://localhost:8082/api/transactions
+
+EXPECTED RESPONSE (200 OK):
+  JSON array of all 5 transactions
+
+------------------------------------------------------------------------
+5.7 Get Transaction by ID
+------------------------------------------------------------------------
+DESCRIPTION : Retrieve a single transaction by its ID
+COMMAND     :
+  curl -X GET http://localhost:8082/api/transactions/1
+
+EXPECTED RESPONSE (200 OK):
+  Single transaction JSON for TXN-2024-001
+
+------------------------------------------------------------------------
+5.8 Get Transaction by Reference Number
+------------------------------------------------------------------------
+DESCRIPTION : Find a transaction using its unique reference number
+COMMAND     :
+  curl -X GET http://localhost:8082/api/transactions/reference/TXN-2024-001
+
+EXPECTED RESPONSE (200 OK):
+  Transaction JSON matching reference TXN-2024-001
+
+------------------------------------------------------------------------
+5.9 Get Transactions by Customer ID
+------------------------------------------------------------------------
+DESCRIPTION : List all transactions for a specific customer
+COMMAND     :
+  curl -X GET http://localhost:8082/api/transactions/customer/1
+
+EXPECTED RESPONSE (200 OK):
+  JSON array of transactions belonging to customerId=1
+
+------------------------------------------------------------------------
+5.10 Get Transactions by Status PENDING
+------------------------------------------------------------------------
+DESCRIPTION : List all transactions with PENDING status
+COMMAND     :
+  curl -X GET http://localhost:8082/api/transactions/status/PENDING
+
+EXPECTED RESPONSE (200 OK):
+  JSON array of all PENDING transactions
+
+------------------------------------------------------------------------
+5.11 Update Transaction 1 Status to COMPLETED
+------------------------------------------------------------------------
+DESCRIPTION : Mark a transaction as completed (partial update - status only)
+COMMAND     :
+  curl -X PATCH "http://localhost:8082/api/transactions/1/status?status=COMPLETED"
+
+EXPECTED RESPONSE (200 OK):
+  {
+    "id": 1,
+    "referenceNumber": "TXN-2024-001",
+    "status": "COMPLETED"
+  }
+
+------------------------------------------------------------------------
+5.12 Update Transaction 2 Status to FAILED
+------------------------------------------------------------------------
+DESCRIPTION : Mark a transaction as failed
+COMMAND     :
+  curl -X PATCH "http://localhost:8082/api/transactions/2/status?status=FAILED"
+
+EXPECTED RESPONSE (200 OK):
+  {
+    "id": 2,
+    "referenceNumber": "TXN-2024-002",
+    "status": "FAILED"
+  }
+
+------------------------------------------------------------------------
+5.13 Update Transaction 3 Status to PROCESSING
+------------------------------------------------------------------------
+DESCRIPTION : Mark a transaction as currently processing
+COMMAND     :
+  curl -X PATCH "http://localhost:8082/api/transactions/3/status?status=PROCESSING"
+
+EXPECTED RESPONSE (200 OK):
+  {
+    "id": 3,
+    "status": "PROCESSING"
+  }
+
+------------------------------------------------------------------------
+5.14 Get Transactions by Status COMPLETED
+------------------------------------------------------------------------
+DESCRIPTION : List all completed transactions
+COMMAND     :
+  curl -X GET http://localhost:8082/api/transactions/status/COMPLETED
+
+EXPECTED RESPONSE (200 OK):
+  JSON array with TXN-2024-001 only
+
+------------------------------------------------------------------------
+5.15 Full Update Transaction 3
+------------------------------------------------------------------------
+DESCRIPTION : Update all fields of a transaction (full PUT update)
+COMMAND     :
+  curl -X PUT http://localhost:8082/api/transactions/3 -H "Content-Type: application/json" -d "{\"referenceNumber\":\"TXN-2024-003\",\"amount\":59.99,\"transactionType\":\"DEBIT\",\"accountNumber\":\"ACC-654321\",\"description\":\"Mouse + keyboard purchase\",\"currency\":\"USD\",\"customerId\":2,\"productId\":2,\"status\":\"COMPLETED\"}"
+
+EXPECTED RESPONSE (200 OK):
+  {
+    "id": 3,
+    "referenceNumber": "TXN-2024-003",
+    "amount": 59.99,
+    "description": "Mouse + keyboard purchase",
+    "status": "COMPLETED"
+  }
+
+------------------------------------------------------------------------
+5.16 Delete Transaction 5
+------------------------------------------------------------------------
+DESCRIPTION : Permanently delete a transaction record
+COMMAND     :
+  curl -X DELETE http://localhost:8082/api/transactions/5
+
+EXPECTED RESPONSE (204 No Content):
+  Empty body — deletion successful
+
+------------------------------------------------------------------------
+5.17 TEST - INVALID Customer ID (Inter-Service Call Fail)
+------------------------------------------------------------------------
+DESCRIPTION : Finance calls customer-service with ID 999 which doesn't exist.
+              customer-service returns 404, finance-service returns 400.
+COMMAND     :
+  curl -X POST http://localhost:8082/api/transactions -H "Content-Type: application/json" -d "{\"referenceNumber\":\"TXN-BAD-001\",\"amount\":100.00,\"transactionType\":\"CREDIT\",\"accountNumber\":\"ACC-999\",\"customerId\":999}"
+
+EXPECTED RESPONSE (400 Bad Request):
+  {
+    "status": 400,
+    "error": "Bad Request",
+    "message": "Customer not found with id: 999"
+  }
+
+------------------------------------------------------------------------
+5.18 TEST - PENDING Customer Not Allowed (Not Verified)
+------------------------------------------------------------------------
+DESCRIPTION : Register a new customer (status=PENDING) and try to use them
+              in a transaction without verifying first.
+              Finance-service calls customer-service, sees status=PENDING, rejects.
+
+STEP A - Register unverified customer:
+  curl -X POST http://localhost:8083/api/customers -H "Content-Type: application/json" -d "{\"firstName\":\"Unverified\",\"lastName\":\"User\",\"email\":\"unverified@example.com\",\"phone\":\"+5555555555\"}"
+
+STEP B - Try transaction (id will be 3 since we deleted customer 3 earlier):
+  curl -X POST http://localhost:8082/api/transactions -H "Content-Type: application/json" -d "{\"referenceNumber\":\"TXN-BAD-002\",\"amount\":200.00,\"transactionType\":\"DEBIT\",\"accountNumber\":\"ACC-111\",\"customerId\":3}"
+
+EXPECTED RESPONSE (400 Bad Request):
+  {
+    "status": 400,
+    "error": "Bad Request",
+    "message": "Customer is not ACTIVE. Current status: PENDING. Please verify the customer first."
+  }
+
+------------------------------------------------------------------------
+5.19 TEST - INVALID Product ID (Inter-Service Call Fail)
+------------------------------------------------------------------------
+DESCRIPTION : Finance calls product-service with ID 999 which doesn't exist.
+              product-service returns 404, finance-service returns 400.
+COMMAND     :
+  curl -X POST http://localhost:8082/api/transactions -H "Content-Type: application/json" -d "{\"referenceNumber\":\"TXN-BAD-003\",\"amount\":100.00,\"transactionType\":\"PAYMENT\",\"accountNumber\":\"ACC-123\",\"customerId\":1,\"productId\":999}"
+
+EXPECTED RESPONSE (400 Bad Request):
+  {
+    "status": 400,
+    "error": "Bad Request",
+    "message": "Product not found with id: 999"
+  }
+
+------------------------------------------------------------------------
+5.20 TEST - Duplicate Reference Number
+------------------------------------------------------------------------
+DESCRIPTION : Try creating a transaction with a reference number that already exists
+COMMAND     :
+  curl -X POST http://localhost:8082/api/transactions -H "Content-Type: application/json" -d "{\"referenceNumber\":\"TXN-2024-001\",\"amount\":50.00,\"transactionType\":\"CREDIT\",\"accountNumber\":\"ACC-111\",\"customerId\":1}"
+
+EXPECTED RESPONSE (400 Bad Request):
+  {
+    "status": 400,
+    "error": "Bad Request",
+    "message": "Reference number already exists: TXN-2024-001"
+  }
+
+------------------------------------------------------------------------
+5.21 TEST - Amount Zero Validation
+------------------------------------------------------------------------
+DESCRIPTION : Try creating a transaction with amount = 0
+COMMAND     :
+  curl -X POST http://localhost:8082/api/transactions -H "Content-Type: application/json" -d "{\"referenceNumber\":\"TXN-BAD-004\",\"amount\":0,\"transactionType\":\"CREDIT\",\"accountNumber\":\"ACC-999\"}"
+
+EXPECTED RESPONSE (400 Bad Request):
+  {
+    "status": 400,
+    "error": "Validation Failed",
+    "errors": {
+      "amount": "must be greater than or equal to 0.01"
+    }
+  }
+
+------------------------------------------------------------------------
+5.22 TEST - Transaction Not Found
+------------------------------------------------------------------------
+DESCRIPTION : Try fetching a transaction with a non-existent ID
+COMMAND     :
+  curl -X GET http://localhost:8082/api/transactions/999
+
+EXPECTED RESPONSE (404 Not Found):
+  {
+    "status": 404,
+    "error": "Not Found",
+    "message": "Transaction not found with id: 999"
+  }
+
+================================================================================
+                    SECTION 6: HTTP STATUS CODE REFERENCE
+================================================================================
+
+  201 Created      - POST success (new resource created)
+  200 OK           - GET / PUT / PATCH success
+  204 No Content   - DELETE success (empty response body)
+  400 Bad Request  - Validation failed / duplicate / business rule violation
+  404 Not Found    - Resource does not exist
+
+================================================================================
+               SECTION 7: INTER-SERVICE COMMUNICATION SUMMARY
+================================================================================
+
+  When POST /api/transactions is called on finance-service:
+
+  Step 1 - finance-service checks duplicate referenceNumber in its own DB
+  Step 2 - finance-service calls customer-service via Eureka:
+             GET http://customer-service/api/customers/{customerId}
+             Checks: customer exists AND status == ACTIVE
+             Fails if: customer not found OR status != ACTIVE
+  Step 3 - finance-service calls product-service via Eureka (if productId given):
+             GET http://product-service/api/products/{productId}
+             Checks: product exists AND isActive=true AND stockQuantity > 0
+             Fails if: product not found OR inactive OR out of stock
+  Step 4 - Saves transaction to finance DB
+  Step 5 - Returns enriched response with customerName, customerEmail, productName
+
+  NOTE: Eureka resolves "customer-service" and "product-service" to actual
+        host:port automatically. No hardcoded IPs anywhere.
+
+================================================================================
+                     SECTION 8: H2 DATABASE CONSOLE URLS
+================================================================================
+
+  Product DB  : http://localhost:8081/h2-console
+                JDBC URL : jdbc:h2:mem:productdb
+                Username : sa  |  Password: (empty)
+
+  Finance DB  : http://localhost:8082/h2-console
+                JDBC URL : jdbc:h2:mem:financedb
+                Username : sa  |  Password: (empty)
+
+  Customer DB : http://localhost:8083/h2-console
+                JDBC URL : jdbc:h2:mem:customerdb
+                Username : sa  |  Password: (empty)
+
+================================================================================
+                         END OF CURL COMMANDS FILE
+================================================================================
