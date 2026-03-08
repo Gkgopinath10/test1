@@ -1,0 +1,667 @@
+{
+  "info": {
+    "_postman_id": "simple-ms-java8",
+    "name": "Simple Microservices - Java 8",
+    "description": "Simple CRUD microservices with inter-service communication.\n\nPorts:\n- Eureka Server    : 8761\n- Product Service  : 8081\n- Finance Service  : 8082\n- Customer Service : 8083\n\nColumns:\n- Customer : id, name, email, phone, status\n- Product  : id, name, price, quantity, category\n- Finance  : id, amount, type, customerId, productId, customerName, productName\n\nStartup Order:\n1. eureka-server\n2. product-service\n3. customer-service\n4. finance-service",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "eureka_url",
+      "value": "http://localhost:8761"
+    },
+    {
+      "key": "product_url",
+      "value": "http://localhost:8081"
+    },
+    {
+      "key": "finance_url",
+      "value": "http://localhost:8082"
+    },
+    {
+      "key": "customer_url",
+      "value": "http://localhost:8083"
+    }
+  ],
+  "item": [
+    {
+      "name": "01 - Health Checks",
+      "item": [
+        {
+          "name": "Eureka Health",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{eureka_url}}/actuator/health"
+            },
+            "description": "Expected: {\"status\":\"UP\"}"
+          }
+        },
+        {
+          "name": "Product Service Health",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{product_url}}/actuator/health"
+            },
+            "description": "Expected: {\"status\":\"UP\"}"
+          }
+        },
+        {
+          "name": "Finance Service Health",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{finance_url}}/actuator/health"
+            },
+            "description": "Expected: {\"status\":\"UP\"}"
+          }
+        },
+        {
+          "name": "Customer Service Health",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{customer_url}}/actuator/health"
+            },
+            "description": "Expected: {\"status\":\"UP\"}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "02 - Eureka Registry",
+      "item": [
+        {
+          "name": "Get All Registered Services",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{eureka_url}}/eureka/apps"
+            },
+            "description": "View all services registered in Eureka.\nExpected: XML showing PRODUCT-SERVICE, FINANCE-SERVICE, CUSTOMER-SERVICE"
+          }
+        },
+        {
+          "name": "Check PRODUCT-SERVICE",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{eureka_url}}/eureka/apps/PRODUCT-SERVICE"
+            },
+            "description": "Verify product-service is registered.\nExpected: XML with status UP on port 8081"
+          }
+        },
+        {
+          "name": "Check FINANCE-SERVICE",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{eureka_url}}/eureka/apps/FINANCE-SERVICE"
+            },
+            "description": "Verify finance-service is registered.\nExpected: XML with status UP on port 8082"
+          }
+        },
+        {
+          "name": "Check CUSTOMER-SERVICE",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{eureka_url}}/eureka/apps/CUSTOMER-SERVICE"
+            },
+            "description": "Verify customer-service is registered.\nExpected: XML with status UP on port 8083"
+          }
+        }
+      ]
+    },
+    {
+      "name": "03 - Customer Service (Port 8083)",
+      "description": "Simple Customer CRUD\nColumns: id, name, email, phone, status\nRun BEFORE Finance Service - customers must exist for finance transactions",
+      "item": [
+        {
+          "name": "CRUD",
+          "item": [
+            {
+              "name": "Create Customer 1 - John",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{customer_url}}/api/customers"
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"name\": \"John Doe\",\n  \"email\": \"john@example.com\",\n  \"phone\": \"9876543210\"\n}"
+                },
+                "description": "Register customer 1. Status auto-set to ACTIVE.\nExpected: 201 Created\n{\n  \"id\": 1,\n  \"name\": \"John Doe\",\n  \"email\": \"john@example.com\",\n  \"phone\": \"9876543210\",\n  \"status\": \"ACTIVE\"\n}"
+              }
+            },
+            {
+              "name": "Create Customer 2 - Jane",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{customer_url}}/api/customers"
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"name\": \"Jane Smith\",\n  \"email\": \"jane@example.com\",\n  \"phone\": \"8765432109\"\n}"
+                },
+                "description": "Register customer 2.\nExpected: 201 Created"
+              }
+            },
+            {
+              "name": "Create Customer 3 - Raj",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{customer_url}}/api/customers"
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"name\": \"Raj Kumar\",\n  \"email\": \"raj@example.com\",\n  \"phone\": \"7654321098\"\n}"
+                },
+                "description": "Register customer 3.\nExpected: 201 Created"
+              }
+            },
+            {
+              "name": "Get All Customers",
+              "request": {
+                "method": "GET",
+                "url": {
+                  "raw": "{{customer_url}}/api/customers"
+                },
+                "description": "Get all customers.\nExpected: 200 OK - array of 3 customers"
+              }
+            },
+            {
+              "name": "Get Customer by ID - 1",
+              "request": {
+                "method": "GET",
+                "url": {
+                  "raw": "{{customer_url}}/api/customers/1"
+                },
+                "description": "Get customer by ID.\nExpected: 200 OK"
+              }
+            },
+            {
+              "name": "Update Customer 1",
+              "request": {
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{customer_url}}/api/customers/1"
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"name\": \"John Doe Updated\",\n  \"email\": \"john@example.com\",\n  \"phone\": \"9999999999\",\n  \"status\": \"ACTIVE\"\n}"
+                },
+                "description": "Update customer details.\nExpected: 200 OK"
+              }
+            },
+            {
+              "name": "Update Customer 2 Status to INACTIVE",
+              "request": {
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{customer_url}}/api/customers/2"
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"name\": \"Jane Smith\",\n  \"email\": \"jane@example.com\",\n  \"phone\": \"8765432109\",\n  \"status\": \"INACTIVE\"\n}"
+                },
+                "description": "Set customer 2 to INACTIVE.\nFinance will reject transactions for INACTIVE customers.\nExpected: 200 OK"
+              }
+            },
+            {
+              "name": "Delete Customer 3",
+              "request": {
+                "method": "DELETE",
+                "url": {
+                  "raw": "{{customer_url}}/api/customers/3"
+                },
+                "description": "Delete customer 3.\nExpected: 200 OK - Customer deleted successfully"
+              }
+            }
+          ]
+        },
+        {
+          "name": "ERROR Tests",
+          "item": [
+            {
+              "name": "ERROR - Duplicate Email",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{customer_url}}/api/customers"
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"name\": \"Duplicate\",\n  \"email\": \"john@example.com\",\n  \"phone\": \"1111111111\"\n}"
+                },
+                "description": "Try registering with existing email.\nExpected: 400 - {\"error\": \"Email already exists: john@example.com\"}"
+              }
+            },
+            {
+              "name": "ERROR - Customer Not Found",
+              "request": {
+                "method": "GET",
+                "url": {
+                  "raw": "{{customer_url}}/api/customers/999"
+                },
+                "description": "Fetch non-existent customer.\nExpected: 400 - {\"error\": \"Customer not found: 999\"}"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "04 - Product Service (Port 8081)",
+      "description": "Simple Product CRUD\nColumns: id, name, price, quantity, category\nRun BEFORE Finance Service - products must exist for finance transactions",
+      "item": [
+        {
+          "name": "CRUD",
+          "item": [
+            {
+              "name": "Create Product 1 - Laptop",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{product_url}}/api/products"
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"name\": \"Laptop\",\n  \"price\": 1299.99,\n  \"quantity\": 50,\n  \"category\": \"Electronics\"\n}"
+                },
+                "description": "Create laptop product.\nExpected: 201 Created\n{\n  \"id\": 1,\n  \"name\": \"Laptop\",\n  \"price\": 1299.99,\n  \"quantity\": 50,\n  \"category\": \"Electronics\"\n}"
+              }
+            },
+            {
+              "name": "Create Product 2 - Mouse",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{product_url}}/api/products"
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"name\": \"Mouse\",\n  \"price\": 29.99,\n  \"quantity\": 100,\n  \"category\": \"Electronics\"\n}"
+                },
+                "description": "Create mouse product.\nExpected: 201 Created"
+              }
+            },
+            {
+              "name": "Create Product 3 - Chair",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{product_url}}/api/products"
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"name\": \"Office Chair\",\n  \"price\": 299.99,\n  \"quantity\": 20,\n  \"category\": \"Furniture\"\n}"
+                },
+                "description": "Create chair product.\nExpected: 201 Created"
+              }
+            },
+            {
+              "name": "Get All Products",
+              "request": {
+                "method": "GET",
+                "url": {
+                  "raw": "{{product_url}}/api/products"
+                },
+                "description": "Get all products.\nExpected: 200 OK - array of 3 products"
+              }
+            },
+            {
+              "name": "Get Product by ID - 1",
+              "request": {
+                "method": "GET",
+                "url": {
+                  "raw": "{{product_url}}/api/products/1"
+                },
+                "description": "Get product by ID.\nExpected: 200 OK"
+              }
+            },
+            {
+              "name": "Update Product 1 - Laptop",
+              "request": {
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{product_url}}/api/products/1"
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"name\": \"Laptop Pro\",\n  \"price\": 1499.99,\n  \"quantity\": 30,\n  \"category\": \"Electronics\"\n}"
+                },
+                "description": "Update product.\nExpected: 200 OK"
+              }
+            },
+            {
+              "name": "Update Product 3 - Set Quantity to 0",
+              "request": {
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{product_url}}/api/products/3"
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"name\": \"Office Chair\",\n  \"price\": 299.99,\n  \"quantity\": 0,\n  \"category\": \"Furniture\"\n}"
+                },
+                "description": "Set product 3 quantity to 0 (out of stock).\nFinance will reject transactions for out of stock products.\nExpected: 200 OK"
+              }
+            },
+            {
+              "name": "Delete Product 3",
+              "request": {
+                "method": "DELETE",
+                "url": {
+                  "raw": "{{product_url}}/api/products/3"
+                },
+                "description": "Delete product 3.\nExpected: 200 OK - Product deleted successfully"
+              }
+            }
+          ]
+        },
+        {
+          "name": "ERROR Tests",
+          "item": [
+            {
+              "name": "ERROR - Product Not Found",
+              "request": {
+                "method": "GET",
+                "url": {
+                  "raw": "{{product_url}}/api/products/999"
+                },
+                "description": "Fetch non-existent product.\nExpected: 400 - {\"error\": \"Product not found: 999\"}"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "05 - Finance Service (Port 8082)",
+      "description": "Simple Finance CRUD with Inter-Service Calls\nColumns: id, amount, type, customerId, productId, customerName, productName\n\nWhen creating a finance record:\n- Calls customer-service to validate customerId (must be ACTIVE)\n- Calls product-service to validate productId (quantity must be > 0)\n- Returns record enriched with customerName and productName\n\nPREREQUISITE:\n- Customer 1 (John) must be ACTIVE\n- Product 1 (Laptop) and Product 2 (Mouse) must have quantity > 0",
+      "item": [
+        {
+          "name": "CRUD",
+          "item": [
+            {
+              "name": "Create Finance - CREDIT (Customer1 + Product1)",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{finance_url}}/api/finance"
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"amount\": 1299.99,\n  \"type\": \"CREDIT\",\n  \"customerId\": 1,\n  \"productId\": 1\n}"
+                },
+                "description": "Create finance record.\nInternally:\n- Calls customer-service GET /api/customers/1 (must be ACTIVE)\n- Calls product-service GET /api/products/1 (quantity must be > 0)\nResponse includes customerName and productName.\nExpected: 201 Created\n{\n  \"id\": 1,\n  \"amount\": 1299.99,\n  \"type\": \"CREDIT\",\n  \"customerId\": 1,\n  \"productId\": 1,\n  \"customerName\": \"John Doe Updated\",\n  \"productName\": \"Laptop Pro\"\n}"
+              }
+            },
+            {
+              "name": "Create Finance - DEBIT (Customer1 + Product2)",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{finance_url}}/api/finance"
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"amount\": 29.99,\n  \"type\": \"DEBIT\",\n  \"customerId\": 1,\n  \"productId\": 2\n}"
+                },
+                "description": "Create debit finance record.\nExpected: 201 Created with customerName and productName filled"
+              }
+            },
+            {
+              "name": "Create Finance - CREDIT (Customer only, no product)",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{finance_url}}/api/finance"
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"amount\": 5000.0,\n  \"type\": \"CREDIT\",\n  \"customerId\": 1\n}"
+                },
+                "description": "Create finance without product.\nOnly calls customer-service.\nExpected: 201 Created - productName will be null"
+              }
+            },
+            {
+              "name": "Get All Finance Records",
+              "request": {
+                "method": "GET",
+                "url": {
+                  "raw": "{{finance_url}}/api/finance"
+                },
+                "description": "Get all finance records.\nExpected: 200 OK - array of records"
+              }
+            },
+            {
+              "name": "Get Finance by ID - 1",
+              "request": {
+                "method": "GET",
+                "url": {
+                  "raw": "{{finance_url}}/api/finance/1"
+                },
+                "description": "Get finance record by ID.\nExpected: 200 OK"
+              }
+            },
+            {
+              "name": "Get Finance by Customer ID - 1",
+              "request": {
+                "method": "GET",
+                "url": {
+                  "raw": "{{finance_url}}/api/finance/customer/1"
+                },
+                "description": "Get all finance records for customer 1.\nExpected: 200 OK - array of customer's records"
+              }
+            },
+            {
+              "name": "Get Finance by Product ID - 1",
+              "request": {
+                "method": "GET",
+                "url": {
+                  "raw": "{{finance_url}}/api/finance/product/1"
+                },
+                "description": "Get all finance records for product 1.\nExpected: 200 OK"
+              }
+            },
+            {
+              "name": "Update Finance Record 1",
+              "request": {
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{finance_url}}/api/finance/1"
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"amount\": 1499.99,\n  \"type\": \"CREDIT\",\n  \"customerId\": 1,\n  \"productId\": 1\n}"
+                },
+                "description": "Update finance record.\nExpected: 200 OK"
+              }
+            },
+            {
+              "name": "Delete Finance Record 3",
+              "request": {
+                "method": "DELETE",
+                "url": {
+                  "raw": "{{finance_url}}/api/finance/3"
+                },
+                "description": "Delete finance record 3.\nExpected: 200 OK - Finance record deleted successfully"
+              }
+            }
+          ]
+        },
+        {
+          "name": "ERROR Tests - Inter-Service",
+          "description": "These tests verify finance-service correctly validates customers and products by calling other services via Eureka",
+          "item": [
+            {
+              "name": "ERROR - Invalid Customer ID 999",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{finance_url}}/api/finance"
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"amount\": 100.0,\n  \"type\": \"CREDIT\",\n  \"customerId\": 999\n}"
+                },
+                "description": "Finance calls customer-service with ID 999 (not found).\nExpected: 400 - {\"error\": \"Customer not found with id: 999\"}"
+              }
+            },
+            {
+              "name": "ERROR - INACTIVE Customer (Customer 2)",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{finance_url}}/api/finance"
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"amount\": 200.0,\n  \"type\": \"DEBIT\",\n  \"customerId\": 2\n}"
+                },
+                "description": "Customer 2 was set to INACTIVE earlier.\nFinance calls customer-service, sees INACTIVE status, rejects.\nExpected: 400 - {\"error\": \"Customer is not ACTIVE. Status: INACTIVE\"}"
+              }
+            },
+            {
+              "name": "ERROR - Invalid Product ID 999",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{finance_url}}/api/finance"
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"amount\": 100.0,\n  \"type\": \"CREDIT\",\n  \"customerId\": 1,\n  \"productId\": 999\n}"
+                },
+                "description": "Finance calls product-service with ID 999 (not found).\nExpected: 400 - {\"error\": \"Product not found with id: 999\"}"
+              }
+            },
+            {
+              "name": "ERROR - Finance Record Not Found",
+              "request": {
+                "method": "GET",
+                "url": {
+                  "raw": "{{finance_url}}/api/finance/999"
+                },
+                "description": "Fetch non-existent finance record.\nExpected: 400 - {\"error\": \"Finance record not found: 999\"}"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
